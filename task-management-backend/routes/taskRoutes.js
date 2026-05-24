@@ -4,6 +4,7 @@ const router = express.Router();
 
 const Task = require("../models/Task");
 
+// GET TASKS
 router.get("/", async (req, res) => {
 
     try {
@@ -21,6 +22,7 @@ router.get("/", async (req, res) => {
     }
 });
 
+// CREATE TASK
 router.post("/", async (req, res) => {
 
     try {
@@ -32,7 +34,11 @@ router.post("/", async (req, res) => {
             "name"
         );
 
-        global.io.emit("taskUpdated", task);
+        // REALTIME UPDATE
+        global.io.emit(
+            "taskUpdated",
+            task
+        );
 
         res.status(201).json(task);
 
@@ -44,17 +50,30 @@ router.post("/", async (req, res) => {
     }
 });
 
+// UPDATE TASK
 router.put("/:id", async (req, res) => {
 
     try {
 
-        let updatedTask = await Task.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        ).populate("assignedTo", "name");
+        let updatedTask =
+            await Task.findByIdAndUpdate(
 
-        global.io.emit("taskUpdated", updatedTask);
+                req.params.id,
+
+                req.body,
+
+                { new: true }
+
+            ).populate(
+                "assignedTo",
+                "name"
+            );
+
+        // REALTIME UPDATE
+        global.io.emit(
+            "taskUpdated",
+            updatedTask
+        );
 
         res.json(updatedTask);
 
@@ -65,47 +84,116 @@ router.put("/:id", async (req, res) => {
         });
     }
 });
+
+// START TIMER
 router.post("/:id/start-timer", async (req, res) => {
 
-    const task = await Task.findByIdAndUpdate(
-        req.params.id,
-        {
-            timerStartedAt: new Date()
-        },
-        { new: true }
-    );
+    try {
 
-    res.json(task);
-});
+        let task =
+            await Task.findByIdAndUpdate(
 
-router.post("/:id/stop-timer", async (req, res) => {
+                req.params.id,
 
-    let task = await Task.findById(req.params.id);
+                {
+                    timerStartedAt: new Date()
+                },
 
-    if (!task.timerStartedAt) {
+                { new: true }
 
-        return res.status(400).json({
-            message: "Timer not started"
+            ).populate(
+                "assignedTo",
+                "name"
+            );
+
+        global.io.emit(
+            "taskUpdated",
+            task
+        );
+
+        res.json(task);
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
         });
     }
-
-    const seconds =
-        (Date.now() - task.timerStartedAt.getTime()) / 1000;
-
-    task.timeSpent += Math.floor(seconds);
-
-    task.timerStartedAt = null;
-
-    await task.save();
-
-    res.json(task);
 });
 
+// STOP TIMER
+router.post("/:id/stop-timer", async (req, res) => {
+
+    try {
+
+        let task =
+            await Task.findById(
+                req.params.id
+            );
+
+        if (!task.timerStartedAt) {
+
+            return res.status(400).json({
+                message: "Timer not started"
+            });
+        }
+
+        const seconds =
+            (
+                Date.now()
+                -
+                task.timerStartedAt.getTime()
+            ) / 1000;
+
+        task.timeSpent +=
+            Math.floor(seconds);
+
+        task.timerStartedAt = null;
+
+        await task.save();
+
+        task = await task.populate(
+            "assignedTo",
+            "name"
+        );
+
+        global.io.emit(
+            "taskUpdated",
+            task
+        );
+
+        res.json(task);
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+    }
+});
+
+// DELETE TASK
 router.delete("/:id", async (req, res) => {
 
     try {
 
-        await Task.findByIdAndDelete(req.params.id);
+        const deletedTask =
+            await Task.findByIdAndDelete(
+                req.params.id
+            );
+
+        if (!deletedTask) {
+
+            return res.status(404).json({
+                message: "Task not found"
+            });
+        }
+
+        // REALTIME DELETE
+        global.io.emit(
+            "taskDeleted",
+            deletedTask._id
+        );
 
         res.json({
             message: "Task Deleted"

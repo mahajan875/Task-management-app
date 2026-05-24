@@ -34,6 +34,7 @@ function KanbanBoard() {
 
         fetchTasks();
 
+        // TASK UPDATE
         socket.on("taskUpdated", (updatedTask) => {
 
             setTasks((prev) => {
@@ -55,9 +56,21 @@ function KanbanBoard() {
             });
         });
 
+        // TASK DELETE
+        socket.on("taskDeleted", (taskId) => {
+
+            setTasks((prev) =>
+                prev.filter(
+                    (task) => task._id !== taskId
+                )
+            );
+        });
+
         return () => {
 
             socket.off("taskUpdated");
+
+            socket.off("taskDeleted");
         };
 
     }, []);
@@ -69,15 +82,15 @@ function KanbanBoard() {
         setTasks(res.data);
     };
 
-    // Create Task
+    // CREATE TASK
     const createTask = async (taskData) => {
 
         await API.post("/tasks", taskData);
 
-        // Socket.IO handles updates automatically
+        // Socket.IO updates automatically
     };
 
-    // Move Task
+    // MOVE TASK
     const moveTask = async (taskId, status) => {
 
         const res = await API.put(`/tasks/${taskId}`, {
@@ -93,7 +106,7 @@ function KanbanBoard() {
         );
     };
 
-    // Filtering Logic
+    // FILTER TASKS
     const filteredTasks = tasks.filter((task) => {
 
         const matchesPriority =

@@ -1,5 +1,7 @@
 import { useDrag } from "react-dnd";
 
+import API from "../services/api";
+
 import TimeTracker from "./TimeTracker";
 
 function TaskCard({ task }) {
@@ -17,6 +19,21 @@ function TaskCard({ task }) {
             isDragging: !!monitor.isDragging()
         })
     }));
+
+    // DELETE TASK
+    const deleteTask = async () => {
+
+        try {
+
+            await API.delete(
+                `/tasks/${task._id}`
+            );
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    };
 
     return (
 
@@ -257,6 +274,23 @@ function TaskCard({ task }) {
                 />
 
             </div>
+
+            {/* Delete Button */}
+            <button
+                onClick={deleteTask}
+                className="
+                    w-full
+                    mt-4
+                    bg-red-500/20
+                    hover:bg-red-500/30
+                    text-red-400
+                    py-2
+                    rounded-xl
+                    transition
+                "
+            >
+                Delete Task
+            </button>
 
         </div>
     );

@@ -1,49 +1,115 @@
-// controllers/taskController.js
-
 const Task = require("../models/Task");
 
+// CREATE TASK
 exports.createTask = async (req, res) => {
+
     try {
 
         const task = await Task.create(req.body);
 
-        io.emit("taskCreated", task);
+        const populatedTask =
+            await Task.findById(task._id)
+            .populate("assignedTo");
 
-        res.status(201).json(task);
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.updateTask = async (req, res) => {
-    try {
-
-        const task = await Task.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
+        global.io.emit(
+            "taskUpdated",
+            populatedTask
         );
 
-        io.emit("taskUpdated", task);
-
-        res.json(task);
+        res.status(201).json(populatedTask);
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+
+        res.status(500).json({
+            message: error.message
+        });
     }
 };
 
-exports.deleteTask = async (req, res) => {
+// GET ALL TASKS
+exports.getTasks = async (req, res) => {
+
     try {
 
-        await Task.findByIdAndDelete(req.params.id);
+        const tasks = await Task.find()
+            .populate("assignedTo")
+            .populate("project");
 
-        io.emit("taskDeleted", req.params.id);
-
-        res.json({ message: "Task Deleted" });
+        res.json(tasks);
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+// UPDATE TASK
+exports.updateTask = async (req, res) => {
+
+    try {
+
+        const updatedTask =
+            await Task.findByIdAndUpdate(
+
+                req.params.id,
+
+                req.body,
+
+                {
+                    new: true
+                }
+
+            )
+            .populate("assignedTo")
+            .populate("project");
+
+        global.io.emit(
+            "taskUpdated",
+            updatedTask
+        );
+
+        res.json(updatedTask);
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+// DELETE TASK
+exports.deleteTask = async (req, res) => {
+
+    try {
+
+        const deletedTask =
+            await Task.findByIdAndDelete(
+                req.params.id
+            );
+
+        if (!deletedTask) {
+
+            return res.status(404).json({
+                message: "Task not found"
+            });
+        }
+
+        global.io.emit(
+            "taskDeleted",
+            deletedTask._id
+        );
+
+        res.json({
+            message: "Task deleted successfully"
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
     }
 };
