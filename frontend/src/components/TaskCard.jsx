@@ -131,6 +131,33 @@ function TaskCard({ task }) {
                 </p>
 
             </div>
+            {/* Project */}
+<div className="mb-4">
+
+    <p className="
+        text-xs
+        uppercase
+        text-gray-400
+        mb-1
+        tracking-wider
+    ">
+        Project
+    </p>
+
+    <p className="
+        text-sm
+        text-cyan-400
+        font-medium
+    ">
+
+        {
+            task.project?.name
+            || "No Project"
+        }
+
+    </p>
+
+</div>
 
             {/* Due Date */}
             <div className="mb-4">

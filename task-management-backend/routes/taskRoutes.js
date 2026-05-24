@@ -10,7 +10,10 @@ router.get("/", async (req, res) => {
     try {
 
         const tasks = await Task.find()
-            .populate("assignedTo", "name");
+
+            .populate("assignedTo", "name")
+
+            .populate("project", "name");
 
         res.json(tasks);
 
@@ -29,10 +32,16 @@ router.post("/", async (req, res) => {
 
         let task = await Task.create(req.body);
 
-        task = await task.populate(
-            "assignedTo",
-            "name"
-        );
+        task = await task.populate([
+            {
+                path: "assignedTo",
+                select: "name"
+            },
+            {
+                path: "project",
+                select: "name"
+            }
+        ]);
 
         // REALTIME UPDATE
         global.io.emit(
@@ -64,10 +73,11 @@ router.put("/:id", async (req, res) => {
 
                 { new: true }
 
-            ).populate(
-                "assignedTo",
-                "name"
-            );
+            )
+
+            .populate("assignedTo", "name")
+
+            .populate("project", "name");
 
         // REALTIME UPDATE
         global.io.emit(
@@ -101,10 +111,11 @@ router.post("/:id/start-timer", async (req, res) => {
 
                 { new: true }
 
-            ).populate(
-                "assignedTo",
-                "name"
-            );
+            )
+
+            .populate("assignedTo", "name")
+
+            .populate("project", "name");
 
         global.io.emit(
             "taskUpdated",
@@ -152,10 +163,16 @@ router.post("/:id/stop-timer", async (req, res) => {
 
         await task.save();
 
-        task = await task.populate(
-            "assignedTo",
-            "name"
-        );
+        task = await task.populate([
+            {
+                path: "assignedTo",
+                select: "name"
+            },
+            {
+                path: "project",
+                select: "name"
+            }
+        ]);
 
         global.io.emit(
             "taskUpdated",
