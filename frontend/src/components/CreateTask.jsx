@@ -12,7 +12,11 @@ function CreateTask({ createTask }) {
 
     const [users, setUsers] = useState([]);
 
+    const [projects, setProjects] = useState([]);
+
     const [assignedTo, setAssignedTo] = useState("");
+
+    const [project, setProject] = useState("");
 
     const [dueDate, setDueDate] = useState("");
 
@@ -20,8 +24,11 @@ function CreateTask({ createTask }) {
 
         fetchUsers();
 
+        fetchProjects();
+
     }, []);
 
+    // FETCH USERS
     const fetchUsers = async () => {
 
         const res = await API.get("/users");
@@ -29,6 +36,15 @@ function CreateTask({ createTask }) {
         setUsers(res.data);
     };
 
+    // FETCH PROJECTS
+    const fetchProjects = async () => {
+
+        const res = await API.get("/projects");
+
+        setProjects(res.data);
+    };
+
+    // CREATE TASK
     const handleSubmit = async () => {
 
         await createTask({
@@ -37,14 +53,21 @@ function CreateTask({ createTask }) {
             description,
             priority,
             assignedTo,
+            project,
             dueDate,
             status: "todo"
         });
 
         setTitle("");
+
         setDescription("");
+
         setPriority("medium");
+
         setAssignedTo("");
+
+        setProject("");
+
         setDueDate("");
     };
 
@@ -83,7 +106,9 @@ function CreateTask({ createTask }) {
                     type="text"
                     placeholder="Enter task title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) =>
+                        setTitle(e.target.value)
+                    }
                     className="
                         w-full
                         bg-[#0f0f12]
@@ -113,7 +138,9 @@ function CreateTask({ createTask }) {
                 <textarea
                     placeholder="Enter task description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) =>
+                        setDescription(e.target.value)
+                    }
                     className="
                         w-full
                         h-28
@@ -144,7 +171,9 @@ function CreateTask({ createTask }) {
 
                 <select
                     value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
+                    onChange={(e) =>
+                        setPriority(e.target.value)
+                    }
                     className="
                         w-full
                         bg-[#0f0f12]
@@ -186,7 +215,9 @@ function CreateTask({ createTask }) {
 
                 <select
                     value={assignedTo}
-                    onChange={(e) => setAssignedTo(e.target.value)}
+                    onChange={(e) =>
+                        setAssignedTo(e.target.value)
+                    }
                     className="
                         w-full
                         bg-[#0f0f12]
@@ -210,6 +241,55 @@ function CreateTask({ createTask }) {
                                 value={user._id}
                             >
                                 {user.name}
+                            </option>
+
+                        ))
+                    }
+
+                </select>
+
+            </div>
+
+            {/* Project */}
+            <div className="mb-4">
+
+                <label className="
+                    block
+                    text-sm
+                    text-gray-400
+                    mb-2
+                ">
+                    Project
+                </label>
+
+                <select
+                    value={project}
+                    onChange={(e) =>
+                        setProject(e.target.value)
+                    }
+                    className="
+                        w-full
+                        bg-[#0f0f12]
+                        border border-white/10
+                        text-white
+                        p-3
+                        rounded-xl
+                        outline-none
+                    "
+                >
+
+                    <option value="">
+                        Select Project
+                    </option>
+
+                    {
+                        projects.map((project) => (
+
+                            <option
+                                key={project._id}
+                                value={project._id}
+                            >
+                                {project.name}
                             </option>
 
                         ))
